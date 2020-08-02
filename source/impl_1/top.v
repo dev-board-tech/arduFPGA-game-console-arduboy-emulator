@@ -235,10 +235,10 @@ rtc #(
 	.PERIOD_STATIC(16000),
 	.CNT_SIZE(14)
 	)rtc_inst(
-	.rst(io_rst),
-	.clk(sys_clk),
-	.intr(nmi_sig),
-	.int_rst(nmi_rst)
+	.rst_i(io_rst),
+	.clk_i(sys_clk),
+	.intr_o(nmi_sig),
+	.int_ack_i(nmi_rst)
 	);
  
 wire [2:0]dummy_out_port_a;
@@ -257,17 +257,17 @@ atmega_pio # (
 	.INITIAL_OUTPUT_VALUE(8'b00000011),
 	.INITIAL_DIR_VALUE(8'b00011111)
 )pio_a(
-	.rst(io_rst),
-	.clk(sys_clk),
-	.addr(io_addr[7:0]),
-	.wr(io_write),
-	.rd(io_read),
-	.bus_in(io_out),
-	.bus_out(dat_pa_d_out),
+	.rst_i(io_rst),
+	.clk_i(sys_clk),
+	.addr_i(io_addr[7:0]),
+	.wr_i(io_write),
+	.rd_i(io_read),
+	.bus_i(io_out),
+	.bus_o(dat_pa_d_out),
 
-	.io_in({BTN_UP_reg_sys, BTN_DN_reg_sys, BTN_BACK_reg_sys, BTN_OK_reg_sys, BTN_INTERRUPT_reg, BTN_LEFT_reg_sys, BTN_RIGHT_reg_sys, 1'b0}),
-	.io_out({dummy_out_port_a, disc_usr_kbd, volume, APP_SS, DES_SS}),
-	.pio_out_io_connect()
+	.io_i({BTN_UP_reg_sys, BTN_DN_reg_sys, BTN_BACK_reg_sys, BTN_OK_reg_sys, BTN_INTERRUPT_reg, BTN_LEFT_reg_sys, BTN_RIGHT_reg_sys, 1'b0}),
+	.io_o({dummy_out_port_a, disc_usr_kbd, volume, APP_SS, DES_SS}),
+	.pio_out_io_connect_o()
 	);
 
 generate
