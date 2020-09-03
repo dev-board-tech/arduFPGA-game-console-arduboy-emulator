@@ -57,6 +57,15 @@
         <Source name="../hdl-core-common/io-atmega/atmega-uart.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="../hdl-core-common/io-standalone/spi-slave.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-screen/interlaced-ntsc.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-screen/ssd1306-to-vga.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
         <Source name="../hdl-core-common/io-other/pwm.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
@@ -69,11 +78,11 @@
         <Source name="../hdl-core-common/util/io-dmux.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="PLL_DEV_12M/PLL_DEV_12M.ipx" type="IPX_Module" type_short="IPX">
-            <Options/>
-        </Source>
         <Source name="source/impl_1/top.v" type="Verilog" type_short="Verilog">
             <Options top_module="top"/>
+        </Source>
+        <Source name="PLL_DEV_48M/PLL_DEV_48M.ipx" type="IPX_Module" type_short="IPX">
+            <Options/>
         </Source>
         <Source name="l1_boot_ld.mem" type="Unknown Type" type_short="Unknown">
             <Options/>

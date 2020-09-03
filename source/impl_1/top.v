@@ -24,6 +24,7 @@
 
 // For REV1.0 short PIN36 and PIN 35 beween them, BTN_BACK has been moved from PIN35 to PIN36.
 `define REV							"1.1"
+`define USE_COMPOSITE_VIDEO_OUT		"TRUE"
 
 `define PLATFORM					"iCE40UP"
 `define FLASH_ROM_FILE_NAME			"l1_boot_ld"
@@ -57,7 +58,7 @@ module top(
 	output VS_xDCS,
 	input VS_DREQ,
 	output UART_TX,
-	input UART_RX
+	inout UART_RX
 	);
 
 wire pll_locked;
@@ -76,7 +77,7 @@ end
 
 HSOSC
 #(
-  .CLKHF_DIV ("0b10")
+  .CLKHF_DIV ("0b00")
 ) HSOSC_inst (
   .CLKHFPU (1'b1),  // I
   .CLKHFEN (1'b1),  // I
@@ -85,7 +86,7 @@ HSOSC
 //synthesis ROUTE_THROUGH_FABRIC = 0;
 /* synthesis ROUTE_THROUGH_FABRIC= [0|1] */
 
-PLL_DEV_12M PLL_inst(
+PLL_DEV_48M PLL_inst(
 	.ref_clk_i(clk),
 	.bypass_i(1'b0),
 	.rst_n_i(1'b1), 
@@ -122,6 +123,7 @@ wire buz_r, buz_l;
 wire [1:0]volume;
 
 wire disc_usr_kbd;
+wire enable_ntsc_out;
 
 reg BTN_INTERRUPT_reg, BTN_BACK_reg, BTN_OK_reg, BTN_UP_reg, BTN_DN_reg, BTN_LEFT_reg, BTN_RIGHT_reg, uSD_CD_reg;
 reg BTN_BACK_reg_sys, BTN_OK_reg_sys, BTN_UP_reg_sys, BTN_DN_reg_sys, BTN_LEFT_reg_sys, BTN_RIGHT_reg_sys;
@@ -159,6 +161,9 @@ begin
 	BTN_INTERRUPT_reg = BTN_INTERRUPT;
 	uSD_CD_reg = uSD_CD;
 end
+
+wire UART_TX_UC;
+wire UART_RX_UC;
 
 atmega32u4_arduboy # (
 	.PLATFORM(`PLATFORM),
@@ -221,8 +226,8 @@ atmega32u4_arduboy # (
 	.VS_xCS(VS_xCS),
 	.VS_xDCS(VS_xDCS),
 	.VS_DREQ(VS_DREQ),
-	.uart_tx(UART_TX),
-	.uart_rx(UART_RX),
+	.uart_tx(UART_TX_UC),
+	.uart_rx(UART_RX_UC),
 	.twi_scl(),
 	.twi_sda(),
 
@@ -246,7 +251,7 @@ rtc #(
 	.int_ack_i(nmi_ack)
 	);
  
-wire [2:0]dummy_out_port_a;
+wire [1:0]dummy_out_port_a;
 wire [7:0]dat_pa_d_out;
 atmega_pio # (
 	.PLATFORM(`PLATFORM),
@@ -258,9 +263,9 @@ atmega_pio # (
 	.PULLUP_MASK(8'b00000000),
 	.PULLDN_MASK(8'b00000000),
 	.INVERSE_MASK(8'b00000000),
-	.OUT_ENABLED_MASK(8'b00011111),
+	.OUT_ENABLED_MASK(8'b00111111),
 	.INITIAL_OUTPUT_VALUE(8'b00000011),
-	.INITIAL_DIR_VALUE(8'b00011111)
+	.INITIAL_DIR_VALUE(   8'b00011111)
 )pio_a(
 	.rst_i(io_rst),
 	.clk_i(sys_clk),
@@ -271,10 +276,72 @@ atmega_pio # (
 	.bus_o(dat_pa_d_out),
 
 	.io_i({BTN_UP_reg_sys, BTN_DN_reg_sys, BTN_BACK_reg_sys, BTN_OK_reg_sys, BTN_INTERRUPT_reg, BTN_LEFT_reg_sys, BTN_RIGHT_reg_sys, 1'b0}),
-	.io_o({dummy_out_port_a, disc_usr_kbd, volume, APP_SS, DES_SS}),
+	.io_o({dummy_out_port_a, enable_ntsc_out, disc_usr_kbd, volume, APP_SS, DES_SS}),
 	.pio_out_io_connect_o()
 	);
+	
 
+if( `USE_COMPOSITE_VIDEO_OUT == "TRUE")
+begin
+	
+wire ntsc_clk = clk;
+wire [12:0]lcd_h_cnt;
+wire [12:0]lcd_v_cnt;
+
+wire pixel_is_visible;
+wire [0:0]ssd1306_rgb_data;
+wire [1:0]ntsc_out;
+
+assign UART_TX = ~enable_ntsc_out ? ntsc_out[0] : UART_TX_UC;
+assign UART_RX = ~enable_ntsc_out ? ntsc_out[1] : 1'bz;
+assign UART_RX_UC = ~enable_ntsc_out ? 1'b1 : UART_RX;
+
+localparam [3:0]  SIGNAL_LEVEL_SYNC         = 4'b0000,
+                    SIGNAL_LEVEL_BLANK        = 4'b0001,
+                    SIGNAL_LEVEL_DARK_GREY    = 4'b0011,
+                    SIGNAL_LEVEL_LIGHT_GREY   = 4'b0111,
+                    SIGNAL_LEVEL_WHITE        = 4'b1111;
+
+interlaced_ntsc # (
+	.PIXEL_NUANCE_DEPTH(1)
+)interlaced_ntsc_inst(
+    .rst_i(sys_rst),
+    .clk_i(ntsc_clk),
+    .pixel_data_i(pixel_is_visible ? (ssd1306_rgb_data[0] ? SIGNAL_LEVEL_WHITE : SIGNAL_LEVEL_BLANK) : SIGNAL_LEVEL_BLANK),
+    .h_sync_out_o(), // single clock tick indicating pixel_y will incrememt on next clock (for debugging)
+    .v_sync_out_o(), // single clock tick indicating pixel_y will reset to 0 or 1 on next clock, depending on the field (for debugging)
+    .pixel_y_o(lcd_v_cnt[9:0]),    // which line
+    .pixel_x_o(lcd_h_cnt[9:0]),
+    .pixel_is_visible_o(pixel_is_visible),
+    .ntsc_out_o(ntsc_out)
+);
+
+ssd1306 # (
+	.X_OLED_SIZE(128),
+	.Y_OLED_SIZE(64),
+	.X_PARENT_SIZE(560),
+	.Y_PARENT_SIZE(400),
+	.PIXEL_INACTIVE_COLOR(1'b0),
+	.PIXEL_ACTIVE_COLOR(1'b1),
+	.INACTIVE_DISPLAY_COLOR(32'h10101010),
+	.VRAM_BUFFERED_OUTPUT("TRUE"),
+	.FULL_COLOR_OUTPUT("FALSE")
+)ssd1306_inst(
+	.rst_i(~ssd1306_rst),
+	.clk_i(sys_clk),
+	
+	.edge_color_i(1'b0),
+	.raster_x_i(lcd_h_cnt),
+	.raster_y_i(lcd_v_cnt),
+	.raster_clk_i(ntsc_clk),
+	.raster_d_o(ssd1306_rgb_data),
+	
+	.ss_i(ssd1306_ss),
+	.scl_i(ssd1306_scl),
+	.mosi_i(MOSI),
+	.dc_i(ssd1306_dc)
+);
+end
 generate
 
 pwm # (

@@ -2,13 +2,13 @@
 <ipxact:component xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014" xmlns:lsccip="http://www.latticesemi.com/XMLSchema/Radiant/ip">
     <ipxact:vendor>latticesemi.com</ipxact:vendor>
     <ipxact:library>module</ipxact:library>
-    <ipxact:name>PLL_DEV_12M</ipxact:name>
+    <ipxact:name>PLL_DEV_48M</ipxact:name>
     <ipxact:version>1.0.1</ipxact:version>
     <ipxact:model>
         <ipxact:instantiations>
             <ipxact:designInstantiation>
-                <ipxact:name>PLL_DEV_12M_design</ipxact:name>
-                <ipxact:designRef library="module" name="PLL_DEV_12M" vendor="latticesemi.com" version="1.0.1"/>
+                <ipxact:name>PLL_DEV_48M_design</ipxact:name>
+                <ipxact:designRef library="module" name="PLL_DEV_48M" vendor="latticesemi.com" version="1.0.1"/>
             </ipxact:designInstantiation>
         </ipxact:instantiations>
         <ipxact:ports>
@@ -64,23 +64,23 @@
                 <ipxact:fileType user="IP-XACT_design">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>rtl/PLL_DEV_12M_bb.v</ipxact:name>
+                <ipxact:name>rtl/PLL_DEV_48M_bb.v</ipxact:name>
                 <ipxact:fileType user="black_box_verilog">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>misc/PLL_DEV_12M_tmpl.vhd</ipxact:name>
+                <ipxact:name>misc/PLL_DEV_48M_tmpl.vhd</ipxact:name>
                 <ipxact:fileType user="template_vhdl">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>misc/PLL_DEV_12M_tmpl.v</ipxact:name>
+                <ipxact:name>misc/PLL_DEV_48M_tmpl.v</ipxact:name>
                 <ipxact:fileType user="template_verilog">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>PLL_DEV_12M.cfg</ipxact:name>
+                <ipxact:name>PLL_DEV_48M.cfg</ipxact:name>
                 <ipxact:fileType user="cfg">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>rtl/PLL_DEV_12M.v</ipxact:name>
+                <ipxact:name>rtl/PLL_DEV_48M.v</ipxact:name>
                 <ipxact:fileType user="top_level_verilog">user</ipxact:fileType>
             </ipxact:file>
         </ipxact:fileSet>
@@ -95,7 +95,7 @@
         </lsccip:deviceInfo>
         <lsccip:generationInfo>
             <lsccip:fileVersion>20180929</lsccip:fileVersion>
-            <lsccip:createdTimestamp>2020 06 14 13:55:41</lsccip:createdTimestamp>
+            <lsccip:createdTimestamp>2020 09 02 20:15:49</lsccip:createdTimestamp>
             <lsccip:radiantBuild>Radiant Software (64-bit) 2.0.1.281.2</lsccip:radiantBuild>
         </lsccip:generationInfo>
     </ipxact:vendorExtensions>

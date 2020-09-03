@@ -1,4 +1,4 @@
-component PLL_DEV_16M is
+component PLL_DEV_48M is
     port(
         ref_clk_i: in std_logic;
         rst_n_i: in std_logic;
@@ -9,7 +9,7 @@ component PLL_DEV_16M is
     );
 end component;
 
-__: PLL_DEV_16M port map(
+__: PLL_DEV_48M port map(
     ref_clk_i=>,
     rst_n_i=>,
     bypass_i=>,
