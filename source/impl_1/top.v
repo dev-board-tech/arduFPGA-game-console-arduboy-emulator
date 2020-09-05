@@ -24,6 +24,24 @@
 
 // For REV1.0 short PIN36 and PIN 35 beween them, BTN_BACK has been moved from PIN35 to PIN36.
 `define REV							"1.1"
+
+
+`define USE_PIO_B					"TRUE"
+`define USE_PIO_C					"TRUE"
+`define USE_PIO_D					"TRUE"
+`define USE_PIO_E					"TRUE"
+`define USE_PIO_F					"TRUE"
+`define USE_PLL						"TRUE"
+`define USE_PLL_HI_FREQ				"FALSE"
+`define USE_TIMER_0					"TRUE"
+`define USE_TIMER_1					"FALSE"
+`define USE_TIMER_3					"TRUE"
+`define USE_TIMER_4					"TRUE"
+`define USE_SPI_1					"TRUE"
+`define USE_UART_1					"TRUE"
+`define USE_TWI_1					"FALSE"
+`define USE_EEPROM					"TRUE"
+`define USE_RNG_AS_ADC				"TRUE"
 `define USE_COMPOSITE_VIDEO_OUT		"TRUE"
 
 `define PLATFORM					"iCE40UP"
@@ -123,7 +141,8 @@ wire buz_r, buz_l;
 wire [1:0]volume;
 
 wire disc_usr_kbd;
-wire enable_ntsc_out;
+wire enable_usb_ntsc_out;
+wire enable_aud_ntsc_out;
 
 reg BTN_INTERRUPT_reg, BTN_BACK_reg, BTN_OK_reg, BTN_UP_reg, BTN_DN_reg, BTN_LEFT_reg, BTN_RIGHT_reg, uSD_CD_reg;
 reg BTN_BACK_reg_sys, BTN_OK_reg_sys, BTN_UP_reg_sys, BTN_DN_reg_sys, BTN_LEFT_reg_sys, BTN_RIGHT_reg_sys;
@@ -184,22 +203,22 @@ atmega32u4_arduboy # (
 
 	.REGS_REGISTERED("FALSE"),
 	.ROM_PATH(`FLASH_ROM_FILE_NAME),
-	.USE_PIO_B("TRUE"),
-	.USE_PIO_C("TRUE"),
-	.USE_PIO_D("TRUE"),
-	.USE_PIO_E("TRUE"),
-	.USE_PIO_F("TRUE"),
-	.USE_PLL("TRUE"),
-	.USE_PLL_HI_FREQ("FALSE"),
-	.USE_TIMER_0("TRUE"),
-	.USE_TIMER_1("FALSE"),
-	.USE_TIMER_3("TRUE"),
-	.USE_TIMER_4("TRUE"),
-	.USE_SPI_1("TRUE"),
-	.USE_UART_1("TRUE"),
-	.USE_TWI_1("FALSE"),
-	.USE_EEPROM("TRUE"),
-	.USE_RNG_AS_ADC("TRUE")
+	.USE_PIO_B(`USE_PIO_B),
+	.USE_PIO_C(`USE_PIO_C),
+	.USE_PIO_D(`USE_PIO_D),
+	.USE_PIO_E(`USE_PIO_E),
+	.USE_PIO_F(`USE_PIO_F),
+	.USE_PLL(`USE_PLL),
+	.USE_PLL_HI_FREQ(`USE_PLL_HI_FREQ),
+	.USE_TIMER_0(`USE_TIMER_0),
+	.USE_TIMER_1(`USE_TIMER_1),
+	.USE_TIMER_3(`USE_TIMER_3),
+	.USE_TIMER_4(`USE_TIMER_4),
+	.USE_SPI_1(`USE_SPI_1),
+	.USE_UART_1(`USE_UART_1),
+	.USE_TWI_1(`USE_TWI_1),
+	.USE_EEPROM(`USE_EEPROM),
+	.USE_RNG_AS_ADC(`USE_RNG_AS_ADC)
 ) atmega32u4_arduboy_inst (
 	.core_rst(sys_rst),
 	.dev_rst(sys_rst),
@@ -240,7 +259,7 @@ atmega32u4_arduboy # (
 	.io_rst(io_rst),
 	.nmi_rst(nmi_rst)
 );
-
+ 
 rtc #(
 	.PERIOD_STATIC(16000),
 	.CNT_SIZE(14)
@@ -251,23 +270,27 @@ rtc #(
 	.int_ack_i(nmi_ack)
 	);
  
-wire [1:0]dummy_out_port_a;
+wire [0:0]dummy_out_port_a;
 wire [7:0]dat_pa_d_out;
 atmega_pio # (
 	.PLATFORM(`PLATFORM),
 	.BUS_ADDR_DATA_LEN(8),
+	.PORT_WIDTH(8),
+	.USE_CLEAR_SET("FALSE"),
 	.PORT_OUT_ADDR('h22),
 	.DDR_ADDR('h21),
 	.PIN_ADDR('h20),
-	.PINMASK(8'b11111111),
-	.PULLUP_MASK(8'b00000000),
-	.PULLDN_MASK(8'b00000000),
-	.INVERSE_MASK(8'b00000000),
-	.OUT_ENABLED_MASK(8'b00111111),
+	.PORT_CLEAR_ADDR('h01),	
+	.PORT_SET_ADDR('h02),
+	.PINMASK(			  8'b11111111),
+	.PULLUP_MASK(		  8'b00000000),
+	.PULLDN_MASK(		  8'b00000000),
+	.INVERSE_MASK(		  8'b00000000),
+	.OUT_ENABLED_MASK(	  8'b01111111),
 	.INITIAL_OUTPUT_VALUE(8'b00000011),
-	.INITIAL_DIR_VALUE(   8'b00011111)
+	.INITIAL_DIR_VALUE(   8'b01111111)
 )pio_a(
-	.rst_i(io_rst),
+	.rst_i(sys_rst),
 	.clk_i(sys_clk),
 	.addr_i(io_addr[7:0]),
 	.wr_i(io_write),
@@ -276,11 +299,14 @@ atmega_pio # (
 	.bus_o(dat_pa_d_out),
 
 	.io_i({BTN_UP_reg_sys, BTN_DN_reg_sys, BTN_BACK_reg_sys, BTN_OK_reg_sys, BTN_INTERRUPT_reg, BTN_LEFT_reg_sys, BTN_RIGHT_reg_sys, 1'b0}),
-	.io_o({dummy_out_port_a, enable_ntsc_out, disc_usr_kbd, volume, APP_SS, DES_SS}),
+	.io_o({dummy_out_port_a, enable_aud_ntsc_out, enable_usb_ntsc_out, disc_usr_kbd, volume, APP_SS, DES_SS}),
 	.pio_out_io_connect_o()
 	);
-	
 
+
+wire [1:0]ntsc_out;
+
+generate
 if( `USE_COMPOSITE_VIDEO_OUT == "TRUE")
 begin
 	
@@ -290,11 +316,10 @@ wire [12:0]lcd_v_cnt;
 
 wire pixel_is_visible;
 wire [0:0]ssd1306_rgb_data;
-wire [1:0]ntsc_out;
 
-assign UART_TX = ~enable_ntsc_out ? ntsc_out[0] : UART_TX_UC;
-assign UART_RX = ~enable_ntsc_out ? ntsc_out[1] : 1'bz;
-assign UART_RX_UC = ~enable_ntsc_out ? 1'b1 : UART_RX;
+assign UART_TX = enable_usb_ntsc_out ? ntsc_out[0] : UART_TX_UC;
+assign UART_RX = enable_usb_ntsc_out ? ntsc_out[1] : 1'bz;
+assign UART_RX_UC = enable_usb_ntsc_out ? 1'b1 : UART_RX;
 
 localparam [3:0]  SIGNAL_LEVEL_SYNC         = 4'b0000,
                     SIGNAL_LEVEL_BLANK        = 4'b0001,
@@ -305,7 +330,7 @@ localparam [3:0]  SIGNAL_LEVEL_SYNC         = 4'b0000,
 interlaced_ntsc # (
 	.PIXEL_NUANCE_DEPTH(1)
 )interlaced_ntsc_inst(
-    .rst_i(sys_rst),
+    .rst_i((~enable_usb_ntsc_out & ~enable_aud_ntsc_out) | sys_rst),
     .clk_i(ntsc_clk),
     .pixel_data_i(pixel_is_visible ? (ssd1306_rgb_data[0] ? SIGNAL_LEVEL_WHITE : SIGNAL_LEVEL_BLANK) : SIGNAL_LEVEL_BLANK),
     .h_sync_out_o(), // single clock tick indicating pixel_y will incrememt on next clock (for debugging)
@@ -341,9 +366,11 @@ ssd1306 # (
 	.mosi_i(MOSI),
 	.dc_i(ssd1306_dc)
 );
-end
-generate
 
+end
+endgenerate
+
+wire buzr, buzl;
 pwm # (
 	.WIDTH(4)
 ) pwm_l (
@@ -352,7 +379,7 @@ pwm # (
 	.en_i(buz_l),
 	.hiz_i(vs_rst),
 	.val_i({2'h0, ~volume}),
-	.pwm_o(BUZ_L)
+	.pwm_o(buzl)
 );
 
 pwm # (
@@ -363,12 +390,13 @@ pwm # (
 	.en_i(buz_r),
 	.hiz_i(vs_rst),
 	.val_i({2'h0, ~volume}),
-	.pwm_o(BUZ_R)
+	.pwm_o(buzr)
 );
 
-endgenerate
 
-assign BUZ_G = vs_rst ? 1'bz : 1'b0;
+assign BUZ_G = (vs_rst & ~enable_aud_ntsc_out) ? 1'bz : 1'b0;
+assign BUZ_L = enable_aud_ntsc_out ? ntsc_out[0] : buzl;
+assign BUZ_R = enable_aud_ntsc_out ? ntsc_out[1] : buzr;
 
 assign io_in = dat_pa_d_out;
 
