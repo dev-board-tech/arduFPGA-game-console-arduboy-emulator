@@ -1,5 +1,5 @@
 /*
- * This IP is the MEGA/XMEGA TOP implementation.
+ * This IP is the arduboy emulator TOP implementation.
  * 
  * Copyright (C) 2020  Iulian Gheorghiu (morgoth@devboard.tech)
  * 
@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
- 
+
 `timescale 1ns / 1ps
 
 `include "mega-def.v"
@@ -395,8 +395,8 @@ pwm # (
 
 
 assign BUZ_G = (vs_rst & ~enable_aud_ntsc_out) ? 1'bz : 1'b0;
-assign BUZ_L = enable_aud_ntsc_out ? ntsc_out[0] : buzl;
-assign BUZ_R = enable_aud_ntsc_out ? ntsc_out[1] : buzr;
+assign BUZ_L = vs_rst ? 1'bz : (enable_aud_ntsc_out ? ntsc_out[0] : buzl);
+assign BUZ_R = vs_rst ? 1'bz : (enable_aud_ntsc_out ? ntsc_out[1] : buzr);
 
 assign io_in = dat_pa_d_out;
 
