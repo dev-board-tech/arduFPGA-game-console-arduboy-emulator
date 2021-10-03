@@ -25,7 +25,6 @@
 // For REV1.0 short PIN36 and PIN 35 beween them, BTN_BACK has been moved from PIN35 to PIN36.
 `define REV							"1.1"
 
-
 `define USE_PIO_B					"TRUE"
 `define USE_PIO_C					"TRUE"
 `define USE_PIO_D					"TRUE"
@@ -34,15 +33,19 @@
 `define USE_PLL						"TRUE"
 `define USE_PLL_HI_FREQ				"FALSE"
 `define USE_TIMER_0					"TRUE"
+`define USE_REDUCED_TIM0			"TRUE"
 `define USE_TIMER_1					"FALSE"
+`define USE_REDUCED_TIM1			"TRUE"
 `define USE_TIMER_3					"TRUE"
+`define USE_REDUCED_TIM3			"TRUE"
 `define USE_TIMER_4					"TRUE"
 `define USE_SPI_1					"TRUE"
 `define USE_UART_1					"TRUE"
+//`define USE_USB2UART
 `define USE_TWI_1					"FALSE"
 `define USE_EEPROM					"TRUE"
 `define USE_RNG_AS_ADC				"TRUE"
-`define USE_COMPOSITE_VIDEO_OUT		"TRUE"
+`define USE_COMPOSITE_VIDEO_OUT		"FALSE"
 
 `define PLATFORM					"iCE40UP"
 `define FLASH_ROM_FILE_NAME			"l1_boot_ld"
@@ -75,9 +78,14 @@ module top(
 	output VS_xCS,
 	output VS_xDCS,
 	input VS_DREQ,
+
 	output UART_TX,
-	inout UART_RX
-	);
+	inout UART_RX,
+
+	inout USBP,
+	inout USBN
+
+);
 
 wire pll_locked;
 reg [3:0]pll_locked_buf;
@@ -87,6 +95,7 @@ wire pll_clk = sys_clk;
 wire sys_clk_int;
 reg [1:0]sys_clk_t;
 
+wire clk48m_i = clk;
 
 always @ (posedge sys_clk)
 begin
@@ -102,7 +111,7 @@ HSOSC
   .CLKHF   (clk)   // O
 );
 //synthesis ROUTE_THROUGH_FABRIC = 0;
-/* synthesis ROUTE_THROUGH_FABRIC= [0|1] */
+// /* synthesis ROUTE_THROUGH_FABRIC= [0|1] */
 
 PLL_DEV_48M PLL_inst(
 	.ref_clk_i(clk),
@@ -137,7 +146,8 @@ wire nmi_rst;
 wire sec_reg_rst;
 wire sec_en;
 
-wire buz_r, buz_l;
+wire buz_r;
+wire buz_l;
 wire [1:0]volume;
 
 wire disc_usr_kbd;
@@ -211,11 +221,19 @@ atmega32u4_arduboy # (
 	.USE_PLL(`USE_PLL),
 	.USE_PLL_HI_FREQ(`USE_PLL_HI_FREQ),
 	.USE_TIMER_0(`USE_TIMER_0),
+	.USE_REDUCED_TIM0(`USE_REDUCED_TIM0),
 	.USE_TIMER_1(`USE_TIMER_1),
+	.USE_REDUCED_TIM1(`USE_REDUCED_TIM1),
 	.USE_TIMER_3(`USE_TIMER_3),
+	.USE_REDUCED_TIM3(`USE_REDUCED_TIM3),
 	.USE_TIMER_4(`USE_TIMER_4),
 	.USE_SPI_1(`USE_SPI_1),
 	.USE_UART_1(`USE_UART_1),
+`ifdef USE_USB2UART
+	.USE_USB2UART("TRUE"),
+`else
+	.USE_USB2UART("FALSE"),
+`endif
 	.USE_TWI_1(`USE_TWI_1),
 	.USE_EEPROM(`USE_EEPROM),
 	.USE_RNG_AS_ADC(`USE_RNG_AS_ADC)
@@ -223,6 +241,7 @@ atmega32u4_arduboy # (
 	.core_rst(sys_rst),
 	.dev_rst(sys_rst),
 	.clk(sys_clk),
+	.clk48m_i(clk48m_i),
 	.clk_pll(pll_clk),
 	.nmi_sig(nmi_sig),
 	.nmi_ack(nmi_ack),
@@ -249,6 +268,8 @@ atmega32u4_arduboy # (
 	.uart_rx(UART_RX_UC),
 	.twi_scl(),
 	.twi_sda(),
+	.usbp_io(USBP),
+	.usbn_io(USBN),
 
 	.io_addr(io_addr),
 	.io_out(io_out),
@@ -266,6 +287,8 @@ rtc #(
 	)rtc_inst(
 	.rst_i(nmi_rst),
 	.clk_i(sys_clk),
+	.clk_cnt_i(sys_clk),
+	.top_i(),
 	.int_o(nmi_sig),
 	.int_ack_i(nmi_ack)
 	);
@@ -317,9 +340,11 @@ wire [12:0]lcd_v_cnt;
 wire pixel_is_visible;
 wire [0:0]ssd1306_rgb_data;
 
+`ifndef USE_USB2UART
 assign UART_TX = enable_usb_ntsc_out ? ntsc_out[0] : UART_TX_UC;
 assign UART_RX = enable_usb_ntsc_out ? ntsc_out[1] : 1'bz;
 assign UART_RX_UC = enable_usb_ntsc_out ? 1'b1 : UART_RX;
+`endif
 
 localparam [3:0]  SIGNAL_LEVEL_SYNC         = 4'b0000,
                     SIGNAL_LEVEL_BLANK        = 4'b0001,
@@ -368,28 +393,36 @@ ssd1306 # (
 );
 
 end
-endgenerate
+else /* `USE_COMPOSITE_VIDEO_OUT != "TRUE" */
+begin
+
+`ifndef USE_USB2UART
+assign UART_TX = UART_TX_UC;
+assign UART_RX_UC = UART_RX;
+`endif
+
+end /* `USE_COMPOSITE_VIDEO_OUT == "TRUE" */
 
 wire buzr, buzl;
 pwm # (
-	.WIDTH(4)
+	.WIDTH(2)
 ) pwm_l (
 	.rst_i(io_rst),
 	.clk_i(sys_clk),
 	.en_i(buz_l),
 	.hiz_i(vs_rst),
-	.val_i({2'h0, ~volume}),
+	.val_i(~volume),
 	.pwm_o(buzl)
 );
 
 pwm # (
-	.WIDTH(4)
+	.WIDTH(2)
 ) pwm_r (
 	.rst_i(io_rst),
 	.clk_i(sys_clk),
 	.en_i(buz_r),
 	.hiz_i(vs_rst),
-	.val_i({2'h0, ~volume}),
+	.val_i(~volume),
 	.pwm_o(buzr)
 );
 
@@ -403,7 +436,6 @@ assign io_in = dat_pa_d_out;
 assign {OLED_DC, OLED_SS, OLED_RST, SCK} = {ssd1306_dc, ssd1306_ss, ssd1306_rst, ssd1306_scl};
 
 assign VS_RST = vs_rst;
-
 
 BB_OD LED_B_Inst (
   .T_N (1'b1),  // I
@@ -423,4 +455,6 @@ BB_OD LED_R_Inst (
   .O   (),  // O
   .B   (RGB0)   // IO
 );
+endgenerate
+
 endmodule

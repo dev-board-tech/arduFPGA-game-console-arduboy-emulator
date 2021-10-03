@@ -62,6 +62,8 @@ top top_inst(
 	.VS_xDCS(),
 	.VS_DREQ(),
 	.UART_TX(),
-	.UART_RX()
+	.UART_RX(),
+	.USBP(),
+	.USBN()
 );
 endmodule

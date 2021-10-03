@@ -3,6 +3,39 @@
     <Options/>
     <Implementation title="impl_1" dir="impl_1" description="impl_1" synthesis="lse" default_strategy="Strategy1">
         <Options def_top="top_sim" top="top"/>
+        <Source name="../hdl-core-common/io-atmega/usb2uart/core_usb_fs_phy/src_v/usb_fs_phy.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-atmega/usb2uart/core_usb_fs_phy/src_v/usb_transceiver.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-atmega/usb2uart/core_usb2uart/src_v/usb_cdc_core.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-atmega/usb2uart/core_usb2uart/src_v/usb_cdc_top.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-atmega/usb2uart/core_usb2uart/src_v/usb_desc_rom.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-atmega/usb2uart/core_usb2uart/src_v/usbf_crc16.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-atmega/usb2uart/core_usb2uart/src_v/usbf_defs.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-atmega/usb2uart/core_usb2uart/src_v/usbf_device_core.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-atmega/usb2uart/core_usb2uart/src_v/usbf_sie_rx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-atmega/usb2uart/core_usb2uart/src_v/usbf_sie_tx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../hdl-core-common/io-atmega/usb2uart/usb2uart.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
         <Source name="../hdl-core-mega-xmega/io-s-h.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
@@ -57,6 +90,9 @@
         <Source name="../hdl-core-common/io-atmega/atmega-uart.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="../hdl-core-common/io-atmega/atmega_twi.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
         <Source name="../hdl-core-common/io-standalone/spi-slave.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
@@ -90,10 +126,16 @@
         <Source name="source/impl_1.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>
-        <Source name="source/impl_1/arduFPGA_iCE40UP5K_game.pdc" type="Physical Constraints File" type_short="PDC">
+        <Source name="source/impl_1/arduFPGA_iCE40UP5K_game.pdc" type="Physical Constraints File" type_short="PDC" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="source/impl_1/arduFPGA_iCE40UP5K_game_USBC.pdc" type="Physical Constraints File" type_short="PDC">
             <Options/>
         </Source>
         <Source name="source/impl_1/impl_1.ldc" type="LSE Design Constraints File" type_short="LDC">
+            <Options/>
+        </Source>
+        <Source name="usb_cdc_descriptor.mem" type="Unknown Type" type_short="Unknown">
             <Options/>
         </Source>
     </Implementation>
